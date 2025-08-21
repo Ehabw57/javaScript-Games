@@ -1,0 +1,77 @@
+<canvas id="gameCanvas" width="400" height="300"></canvas>
+<script>
+const canvas = document.getElementById("gameCanvas");
+canvas.width = window.innerWidth
+canvas.height = window.innerHeight
+const ctx = canvas.getContext("2d");
+
+// المستطيل (اللاعب)
+const rect = { x: 120, y: 80, width: 120, height: 100 };
+
+// الدائرة (العدو)
+const circle = { x: 80, y: 150, radius: 30, speed: 13 };
+
+// دالة التصادم
+function circleRect(circle, rect) {
+  let closestX = Math.max(rect.x, Math.min(circle.x, rect.x + rect.width));
+  let closestY = Math.max(rect.y, Math.min(circle.y, rect.y + rect.height));
+
+  let dx = circle.x - closestX;
+  let dy = circle.y - closestY;
+
+  return {
+    collide: (dx * dx + dy * dy) <= (circle.radius * circle.radius),
+    closestX,
+    closestY
+  };
+}
+
+// لوحة المفاتيح
+const keys = {};
+window.addEventListener("keydown", e => keys[e.key] = true);
+window.addEventListener("keyup", e => keys[e.key] = false);
+
+function update() {
+  if (keys["ArrowUp"]) circle.y -= circle.speed;
+  if (keys["ArrowDown"]) circle.y += circle.speed;
+  if (keys["ArrowLeft"]) circle.x -= circle.speed;
+  if (keys["ArrowRight"]) circle.x += circle.speed;
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // ارسم المستطيل
+  ctx.fillStyle = "blue";
+  ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+
+  // ارسم الدائرة
+  ctx.strokeStyle = "red";
+  ctx.beginPath();
+  ctx.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // احسب التصادم
+  const result = circleRect(circle, rect);
+
+  // ارسم النقطة الأقرب
+  ctx.fillStyle = "green";
+  ctx.beginPath();
+  ctx.arc(result.closestX, result.closestY, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // لو في تصادم اكتب رسالة
+  ctx.fillStyle = "black";
+  ctx.font = "16px Arial";
+  ctx.fillText(result.collide ? "Collision!" : "No Collision", 10, 20);
+}
+
+function gameLoop() {
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+
