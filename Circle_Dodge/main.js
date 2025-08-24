@@ -1,10 +1,10 @@
 import InputHandler from "./handelInput.js";
 import Player from "./player.js"
-//import Enemy from "./enemy.js"
+import Enemy from "./enemy.js"
 //import {DEFFICULTY} from "./global.js"
 
 const DEFFICULTY = {
-  spawnInterval: 3,
+  spawnInterval: 1500,
   gridGap: 30,
   player: {
     size: 30,
@@ -13,7 +13,8 @@ const DEFFICULTY = {
   },
   enemy: {
     size: {min: 5, max:20},
-    speed: {min: 3, max: 10},
+    speed: {min: 1, max: 5},
+    color: "red"
   }
 }
 
@@ -21,19 +22,21 @@ class Game {
   constructor(gameCofnig){
     this.width = canvas.width
     this.height = canvas.height
-    this.player = new Player(this, gameCofnig.player)
     this.gameTime = 0;
+    this.player = new Player(this, gameCofnig.player)
     this.state = null;
     this.input = new InputHandler()
     this.enemies = []
     this.enemySpawnInterval = gameCofnig.spawnInterval;
+    this.spawnTime = 0;
+    this.gameConfig = gameCofnig;
     this.gap = gameCofnig.player.size;
   }
 
   spawnEnemy() {
-    const margin = gameConfig.enemy.size.max * 2;
-    const speed = this.rand(gameConfig.enemy.speed.min, gameConfig.enemy.speed.max)
-    const raduis = this.rand(gameConfig.enemy.size.min, gameConfig.enemy.size.max)
+    const margin = this.gameConfig.enemy.size.max * 2;
+    const speed = this.rand(this.gameConfig.enemy.speed.min, this.gameConfig.enemy.speed.max)
+    const r = this.rand(this.gameConfig.enemy.size.min, this.gameConfig.enemy.size.max)
     const side = Math.floor(this.rand(0, 4)) 
     let x, y = 0;
 
@@ -41,16 +44,11 @@ class Game {
     else if (side == 1) {x = this.rand(0, this.width); y = -margin}
     else if (side == 2) {x = this.width + margin; y = this.rand(0, this.height)}
     else {x = this.rand(0, this.width); y = this.height + margin}
-
-    return {
-      x, y,
-      r: raduis,
-      speed,side}
+      this.enemies.push(new Enemy(x, y, r, 'red', speed, this.player, this))
   }
 
   drawGrid(context) {
     context.beginPath();
-    console.log(this.width)
     for (let x = 0; x <= this.width; x += this.gap) {
       context.moveTo(x, 0); context.lineTo(x, this.height);
     }
@@ -82,12 +80,26 @@ class Game {
   }
 
   update(deltaTime) {
+      this.gameTime += deltaTime;
+      this.spawnTime += deltaTime;
+      if (this.spawnTime >= this.enemySpawnInterval){
+        this.spawnTime = 0;
+        console.log('enemy spawnd!')
+          this.spawnEnemy()
+      }
+    this.enemies.forEach((e) => {
+      e.update(deltaTime);
+      if(e.isCollided())  console.log('collide happend') 
+    })
     this.player.update(this.input.keys, deltaTime)
   }
 
   draw(context) {
     this.drawGrid(context)
     this.player.draw(context)
+    this.enemies.forEach((e) => {
+      e.draw(context)
+      })
   }
 
   resize() {
