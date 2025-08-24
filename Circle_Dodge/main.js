@@ -4,12 +4,15 @@ import Enemy from "./enemy.js"
 //import {DEFFICULTY} from "./global.js"
 
 const DEFFICULTY = {
-  spawnInterval: 1500,
+  spawnInterval: 22500,
   gridGap: 30,
   player: {
     size: 30,
     color: "blue",
-    speed: 10,
+    speed: 5,
+    dashSpeed: 20,
+    dashDuration: 200,
+    dashCoolDown: 1000
   },
   enemy: {
     size: {min: 5, max:20},

@@ -4,6 +4,11 @@ export default class Player {
     this.size = config.size;
     this.color = config.color
     this.speed = config.speed;
+    this.dashSpeed = config.dashSpeed;
+    this.dashDuration = config.dashDuration;
+    this.maxCoolDown = config.dashCoolDown;
+    this.dashCoolDown = 0
+    this.dashTime = 0;
     this.x = this.game.width / 2
     this.y = this.game.height / 2
   }
@@ -13,16 +18,30 @@ export default class Player {
     this.y = this.game.clamp(this.y, 0, this.game.height - this.size)
   }
 
-  update(input) {
+  update(input, dt) {
     let vx = 0, vy = 0;
     if (input['ArrowDown']) vy += 1;
     if (input['ArrowRight']) vx += 1;
     if (input['ArrowUp']) vy -= 1;
     if (input['ArrowLeft']) vx -= 1;
 
+    if(input['Shift'] && this.dashCoolDown < 0) {
+      this.dashCoolDown = this.maxCoolDown;
+      this.dashTime = this.dashDuration;
+    }
+
     const direction = this.game.normlize(vx, vy)
-    this.x += direction.x * this.speed
-    this.y += direction.y * this.speed
+    if (this.dashTime > 0 ){
+      this.x += direction.x * this.dashSpeed
+      this.y += direction.y * this.dashSpeed
+    } else {
+      this.x += direction.x * this.speed
+      this.y += direction.y * this.speed
+    }
+
+    this.dashTime -= dt;
+    this.dashCoolDown -=dt;
+
     this.hadnelLimits()
   }
 
