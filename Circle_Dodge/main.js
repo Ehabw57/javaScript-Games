@@ -1,64 +1,92 @@
 import InputHandler from "./handelInput.js";
-import Player from "./player.js"
-import Enemy from "./enemy.js"
+import Player from "./player.js";
+import Enemy from "./enemy.js";
 //import {DEFFICULTY} from "./global.js"
 
 const DEFFICULTY = {
-  spawnInterval: 22500,
+  spawnInterval: 2500,
   gridGap: 30,
   player: {
     size: 30,
-    color: "blue",
+    color: "white",
     speed: 5,
-    dashSpeed: 20,
+    dashSpeed: 15,
     dashDuration: 200,
-    dashCoolDown: 1000
+    dashCoolDown: 800,
   },
   enemy: {
-    size: {min: 5, max:20},
-    speed: {min: 1, max: 5},
-    color: "red"
-  }
+    size: { min: 5, max: 20 },
+    speed: { min: 1, max: 5 },
+    color: "red",
+  },
+};
+
+function xyz(heelo) {
+  console.log(heelo)
 }
 
 class Game {
-  constructor(gameCofnig){
-    this.width = canvas.width
-    this.height = canvas.height
+  constructor(gameConfig) {
+    this.width = canvas.width;
+    this.height = canvas.height;
     this.gameTime = 0;
-    this.player = new Player(this, gameCofnig.player)
+    this.player = new Player(this, gameConfig.player);
     this.state = null;
-    this.input = new InputHandler()
-    this.enemies = []
-    this.enemySpawnInterval = gameCofnig.spawnInterval;
+    this.input = new InputHandler();
+    this.enemies = [];
+    this.enemySpawnInterval = gameConfig.spawnInterval;
     this.spawnTime = 0;
-    this.gameConfig = gameCofnig;
-    this.gap = gameCofnig.player.size;
+    this.gameConfig = gameConfig;
+    this.gap = gameConfig.player.size;
   }
 
   spawnEnemy() {
     const margin = this.gameConfig.enemy.size.max * 2;
-    const speed = this.rand(this.gameConfig.enemy.speed.min, this.gameConfig.enemy.speed.max)
-    const r = this.rand(this.gameConfig.enemy.size.min, this.gameConfig.enemy.size.max)
-    const side = Math.floor(this.rand(0, 4)) 
-    let x, y = 0;
+    const speed = this.rand(
+      this.gameConfig.enemy.speed.min,
+      this.gameConfig.enemy.speed.max,
+    );
+    const r = this.rand(
+      this.gameConfig.enemy.size.min,
+      this.gameConfig.enemy.size.max,
+    );
+    const side = Math.floor(this.rand(0, 4));
+    let x,
+      y = 0;
 
-    if (side == 0) {x = -margin; y = this.rand(0, this.height)}
-    else if (side == 1) {x = this.rand(0, this.width); y = -margin}
-    else if (side == 2) {x = this.width + margin; y = this.rand(0, this.height)}
-    else {x = this.rand(0, this.width); y = this.height + margin}
-      this.enemies.push(new Enemy(x, y, r, 'red', speed, this.player, this))
+    if (side == 0) {
+      x = -margin;
+      y = this.rand(0, this.height);
+    } else if (side == 1) {
+      x = this.rand(0, this.width);
+      y = -margin;
+    } else if (side == 2) {
+      x = this.width + margin;
+      y = this.rand(0, this.height);
+    } else {
+      x = this.rand(0, this.width);
+      y = this.height + margin;
+    }
+
+    this.enemies.push(
+      new Enemy(x, y, r, this.gameConfig.enemy.color, speed, this.player, this),
+    );
   }
 
   drawGrid(context) {
+    context.clearRect(0, 0, this.width, this.height);
+    context.fillStyle = "rgb(10,13,10)";
+    context.fillRect(0, 0, this.width, this.height);
     context.beginPath();
     for (let x = 0; x <= this.width; x += this.gap) {
-      context.moveTo(x, 0); context.lineTo(x, this.height);
+      context.moveTo(x, 0);
+      context.lineTo(x, this.height);
     }
     for (let y = 0; y <= this.height; y += this.gap) {
-      context.moveTo(0, y); context.lineTo(this.width, y);
+      context.moveTo(0, y);
+      context.lineTo(this.width, y);
     }
-    context.strokeStyle = 'rgba(0,0,0,0.2)';
+    context.strokeStyle = "rgba(200,200,200,0.6)";
     context.lineWidth = 0.4;
     context.stroke();
   }
@@ -70,39 +98,39 @@ class Game {
   distance(ax, ay, bx, by) {
     const distanX = ax - bx;
     const distanY = ay - by;
-    return Math.hypot(distanX, distanY)
+    return Math.hypot(distanX, distanY);
   }
 
   normlize(x, y) {
     const hypot = Math.hypot(x, y) || 1;
-    return {x: x / hypot, y: y / hypot}
+    return { x: x / hypot, y: y / hypot };
   }
 
-  clamp(v, min, max) { 
-    return Math.max(min, Math.min(max, v)); 
+  clamp(v, min, max) {
+    return Math.max(min, Math.min(max, v));
   }
 
   update(deltaTime) {
-      this.gameTime += deltaTime;
-      this.spawnTime += deltaTime;
-      if (this.spawnTime >= this.enemySpawnInterval){
-        this.spawnTime = 0;
-        console.log('enemy spawnd!')
-          this.spawnEnemy()
-      }
+    this.gameTime += deltaTime;
+    this.spawnTime += deltaTime;
+    if (this.spawnTime >= this.enemySpawnInterval) {
+      this.spawnTime = 0;
+      console.log("enemy spawnd!");
+      this.spawnEnemy();
+    }
     this.enemies.forEach((e) => {
       e.update(deltaTime);
-      if(e.isCollided())  console.log('collide happend') 
-    })
-    this.player.update(this.input.keys, deltaTime)
+      if (e.isCollided()) console.log("collide happend");
+    });
+    this.player.update(this.input.keys, deltaTime);
   }
 
   draw(context) {
-    this.drawGrid(context)
-    this.player.draw(context)
+    this.drawGrid(context);
+    this.player.draw(context);
     this.enemies.forEach((e) => {
-      e.draw(context)
-      })
+      e.draw(context);
+    });
   }
 
   resize() {
@@ -113,22 +141,20 @@ class Game {
   }
 }
 
-const canvas = document.getElementById('game');
+const canvas = document.getElementById("game");
 canvas.width = innerWidth;
 canvas.height = innerHeight;
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext("2d");
 
-const game = new Game(DEFFICULTY)
+const game = new Game(DEFFICULTY);
 window.onresize = game.resize;
 let lastTime = 0;
 
 function animate(timestamp) {
   let deltaTime = timestamp - lastTime;
-  lastTime = timestamp
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-  game.update(deltaTime)
-  game.draw(ctx)
-  requestAnimationFrame(animate)
+  lastTime = timestamp;
+  game.update(deltaTime);
+  game.draw(ctx);
+  requestAnimationFrame(animate);
 }
-animate(0)
-
+animate(0);
