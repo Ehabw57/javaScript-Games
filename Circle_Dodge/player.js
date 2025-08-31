@@ -3,6 +3,7 @@ export default class Player {
     this.game = game;
     this.size = config.size;
     this.color = config.color;
+    this.dashColor = config.dashColor
     this.speed = config.speed;
     this.dashSpeed = config.dashSpeed;
     this.dashDuration = config.dashDuration;
@@ -52,7 +53,7 @@ export default class Player {
 
   draw(context) {
     this.trail.forEach((t) => {
-      context.fillStyle = this.color
+      context.fillStyle = this.dashColor
       context.fillRect(t.x, t.y, this.size, this.size);
       this.trail.shift()
     })

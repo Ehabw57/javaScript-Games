@@ -8,11 +8,12 @@ const DEFFICULTY = {
   gridGap: 30,
   player: {
     size: 30,
-    color: "white",
+    color: "rgba(255, 255, 255, 1)",
+    dashColor: "rgba(25, 55, 255, .5)",
     speed: 5,
-    dashSpeed: 15,
+    dashSpeed: 10,
     dashDuration: 200,
-    dashCoolDown: 800,
+    dashCoolDown: 1000,
   },
   enemy: {
     size: { min: 5, max: 20 },
@@ -20,10 +21,6 @@ const DEFFICULTY = {
     color: "red",
   },
 };
-
-function xyz(heelo) {
-  console.log(heelo)
-}
 
 class Game {
   constructor(gameConfig) {
@@ -73,9 +70,20 @@ class Game {
     );
   }
 
+  drawGameOver(context) {
+    context.fillStyle = "rgba(0, 0, 0, 0.5)";
+    context.fillRect(0, 0, this.width, this.height);
+    context.textAlign = 'center'
+    context.font = "50px Arial";
+    context.fillStyle = "red";
+    context.fillText("GameOver", this.width / 2, this.height / 2);
+    context.fillStyle = "white";
+    context.font = "20px Arial";
+    context.fillText("Enenmy Cought you", this.width / 2, this.height / 2 + 30);
+  }
+
   drawGrid(context) {
-    context.clearRect(0, 0, this.width, this.height);
-    context.fillStyle = "rgb(10,13,10)";
+    context.fillStyle = "rgba(10,13,10, 0.5)";
     context.fillRect(0, 0, this.width, this.height);
     context.beginPath();
     for (let x = 0; x <= this.width; x += this.gap) {
@@ -120,12 +128,18 @@ class Game {
     }
     this.enemies.forEach((e) => {
       e.update(deltaTime);
-      if (e.isCollided()) console.log("collide happend");
+      if (e.isCollided()) {
+        this.state = 'over';
+        this.drawGameOver(ctx)
+      }
     });
     this.player.update(this.input.keys, deltaTime);
   }
 
   draw(context) {
+    if(this.state == 'over') {
+      return
+    }
     this.drawGrid(context);
     this.player.draw(context);
     this.enemies.forEach((e) => {
@@ -153,7 +167,8 @@ let lastTime = 0;
 function animate(timestamp) {
   let deltaTime = timestamp - lastTime;
   lastTime = timestamp;
-  game.update(deltaTime);
+  if( game.state != 'over')
+    game.update(deltaTime);
   game.draw(ctx);
   requestAnimationFrame(animate);
 }
