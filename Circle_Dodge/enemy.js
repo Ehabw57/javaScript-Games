@@ -128,4 +128,118 @@ export class TriangleEnemy extends Enemy {
   }
 }
 
+export class PolygonEnemy extends Enemy {
+  constructor(x, y, r, color, speed, player, game, vx = 0, vy = 0) {
+    super(x, y, r, color, speed, player, game);
+    this.sides = 6; 
+    this.angle = 0;
+    this.rotationSpeed = 0.02;
+    this.vx = vx;
+    this.vy = vy;
+  }
+
+  setRandomSide() {
+
+  }
+
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.angle += this.rotationSpeed;
+
+    if (this.x <= this.r || this.x >= this.game.width - this.r) {
+      this.vx = -this.vx;
+      this.x = this.game.clamp(this.x, this.r, this.game.width - this.r);
+    }
+    if (this.y <= this.r || this.y >= this.game.height - this.r) {
+      this.vy = -this.vy;
+      this.y = this.game.clamp(this.y, this.r, this.game.height - this.r);
+    }
+
+
+  }
+
+  draw(context) {
+    context.beginPath();
+    context.fillStyle = this.color;
+
+    for (let i = 0; i < this.sides; i++) {
+      const angle = this.angle + (i * 2 * Math.PI) / this.sides;
+      const x = this.x + Math.cos(angle) * this.r;
+      const y = this.y + Math.sin(angle) * this.r;
+      
+      if (i === 0) {
+        context.moveTo(x, y);
+      } else {
+        context.lineTo(x, y);
+      }
+    }
+    
+    context.closePath();
+    context.fill();
+  }
+}
+
+export class ZigzagEnemy extends Enemy {
+  constructor(x, y, r, color, speed, player, game) {
+    super(x, y, r, color, speed, player, game);
+    this.zigzagTime = 0;
+    this.zigzagFrequency = 0.02; 
+    this.zigzagAmplitude = 90;
+    this.baseDirection = { x: 0, y: 0 };
+    this.calculateBaseDirection();
+  }
+
+  calculateBaseDirection() {
+    const dx = (this.player.x + this.player.size / 2) - this.x;
+    const dy = (this.player.y + this.player.size / 2) - this.y;
+    const distance = Math.hypot(dx, dy);
+    this.baseDirection = { x: dx / distance, y: dy / distance };
+  }
+
+  update() {
+    this.zigzagTime += this.zigzagFrequency;
+
+    const zigzagOffset = Math.sin(this.zigzagTime) * this.zigzagAmplitude;
+    
+
+    const perpX = -this.baseDirection.y;
+    const perpY = this.baseDirection.x;
+    
+
+    const moveX = this.baseDirection.x + (perpX * zigzagOffset * 0.01);
+    const moveY = this.baseDirection.y + (perpY * zigzagOffset * 0.01);
+    
+  
+    const distance = Math.hypot(moveX, moveY);
+    const direction = { x: moveX / distance, y: moveY / distance };
+    
+    this.x += direction.x * this.speed;
+    this.y += direction.y * this.speed;
+    
+
+    if (Math.random() < 0.01) {
+      this.calculateBaseDirection();
+    }
+  }
+
+  draw(context) {
+    context.beginPath();
+    context.fillStyle = this.color;
+  
+    const points = [
+      { x: this.x, y: this.y - this.r },
+      { x: this.x + this.r, y: this.y },
+      { x: this.x, y: this.y + this.r },
+      { x: this.x - this.r, y: this.y }  
+    ];
+    
+    context.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+      context.lineTo(points[i].x, points[i].y);
+    }
+    context.closePath();
+    context.fill();
+  }
+}
 

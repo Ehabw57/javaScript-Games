@@ -1,6 +1,6 @@
 import InputHandler from "./handelInput.js";
 import Player from "./player.js";
-import Enemy, { CircleEnemy, TriangleEnemy } from "./enemy.js";
+import Enemy, { CircleEnemy, TriangleEnemy, PolygonEnemy, ZigzagEnemy } from "./enemy.js";
 //import {DEFFICULTY} from "./global.js"
 
 const DEFFICULTY = {
@@ -26,6 +26,16 @@ const DEFFICULTY = {
       speed: { min: 15, max: 25 },
       color: "#ff8800",
     },
+    polygon: {
+      size: { min: 20, max: 20 },
+      speed: { min: 3, max: 7 },
+      color: "#8800ff",
+    },
+    zigzag: {
+      size: { min: 15, max: 15 },
+      speed: { min: 3, max: 5 },
+      color: "#00ff88",
+    },
   },
 };
 
@@ -45,7 +55,7 @@ class Game {
   }
 
   spawnEnemy() {
-    const enemyType = Math.floor(Math.random() * 2);
+    const enemyType = Math.floor(Math.random() * 4);
     let enemy;
 
     if (enemyType === 0) {
@@ -71,11 +81,67 @@ class Game {
       }
 
             enemy = new CircleEnemy(x, y, r, cfg.color, speed, this.player, this);
-    } else {
+    } else if (enemyType === 1) {
       const cfg = this.gameConfig.enemy.triangle;
       const speed = this.rand(cfg.speed.min, cfg.speed.max);
       const r = this.rand(cfg.size.min, cfg.size.max);
       enemy = new TriangleEnemy(0, 0, r, cfg.color, speed, this.player, this);
+    } else if (enemyType === 2) {
+      // Polygon enemy - spawns from random side and bounces
+      const cfg = this.gameConfig.enemy.polygon;
+      const speed = this.rand(cfg.speed.min, cfg.speed.max);
+      const r = this.rand(cfg.size.min, cfg.size.max);
+      const margin = cfg.size.max * 2;
+      const side = Math.floor(this.rand(0, 4));
+      let x, y = 0;
+      let vx = 0, vy = 0;
+
+      if (side == 0) { // left
+        x = -margin;
+        y = this.rand(0, this.height);
+        vx = Math.abs(speed);
+        vy = (Math.random() - 0.5) * speed;
+      } else if (side == 1) { // top
+        x = this.rand(0, this.width);
+        y = -margin;
+        vx = (Math.random() - 0.5) * speed;
+        vy = Math.abs(speed);
+      } else if (side == 2) { // right
+        x = this.width + margin;
+        y = this.rand(0, this.height);
+        vx = -Math.abs(speed);
+        vy = (Math.random() - 0.5) * speed;
+      } else if (side == 3) { // bottom
+        x = this.rand(0, this.width);
+        y = this.height + margin;
+        vx = (Math.random() - 0.5) * speed;
+        vy = -Math.abs(speed);
+      }
+      enemy = new PolygonEnemy(x, y, r, cfg.color, speed, this.player, this, vx, vy);
+    } else {
+      // Zigzag enemy - spawns from random side and moves in zigzag pattern
+      const cfg = this.gameConfig.enemy.zigzag;
+      const speed = this.rand(cfg.speed.min, cfg.speed.max);
+      const r = this.rand(cfg.size.min, cfg.size.max);
+      const margin = cfg.size.max * 2;
+      const side = Math.floor(this.rand(0, 4));
+      let x, y = 0;
+
+      if (side == 0) {
+        x = -margin;
+        y = this.rand(0, this.height);
+      } else if (side == 1) {
+        x = this.rand(0, this.width);
+        y = -margin;
+      } else if (side == 2) {
+        x = this.width + margin;
+        y = this.rand(0, this.height);
+      } else if (side == 3) {
+        x = this.rand(0, this.width);
+        y = this.height + margin;
+      }
+      
+      enemy = new ZigzagEnemy(x, y, r, cfg.color, speed, this.player, this);
     }
 
     this.enemies.push(enemy);
