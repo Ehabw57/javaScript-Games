@@ -1,7 +1,7 @@
 import InputHandler from "./handelInput.js";
 import Player from "./player.js";
-import Enemy, { CircleEnemy, TriangleEnemy, PolygonEnemy, ZigzagEnemy } from "./enemy.js";
-//import {DEFFICULTY} from "./global.js"
+import Enemy, { CircleEnemy, TriangleEnemy, PolygonEnemy, DiamondEnemy } from "./enemy.js";
+
 
 const DEFFICULTY = {
   spawnInterval: 2500,
@@ -31,7 +31,7 @@ const DEFFICULTY = {
       speed: { min: 3, max: 7 },
       color: "#8800ff",
     },
-    zigzag: {
+    diamond: {
       size: { min: 15, max: 15 },
       speed: { min: 3, max: 5 },
       color: "#00ff88",
@@ -87,7 +87,6 @@ class Game {
       const r = this.rand(cfg.size.min, cfg.size.max);
       enemy = new TriangleEnemy(0, 0, r, cfg.color, speed, this.player, this);
     } else if (enemyType === 2) {
-      // Polygon enemy - spawns from random side and bounces
       const cfg = this.gameConfig.enemy.polygon;
       const speed = this.rand(cfg.speed.min, cfg.speed.max);
       const r = this.rand(cfg.size.min, cfg.size.max);
@@ -96,22 +95,22 @@ class Game {
       let x, y = 0;
       let vx = 0, vy = 0;
 
-      if (side == 0) { // left
+      if (side == 0) { 
         x = -margin;
         y = this.rand(0, this.height);
         vx = Math.abs(speed);
         vy = (Math.random() - 0.5) * speed;
-      } else if (side == 1) { // top
+      } else if (side == 1) {
         x = this.rand(0, this.width);
         y = -margin;
         vx = (Math.random() - 0.5) * speed;
         vy = Math.abs(speed);
-      } else if (side == 2) { // right
+      } else if (side == 2) {
         x = this.width + margin;
         y = this.rand(0, this.height);
         vx = -Math.abs(speed);
         vy = (Math.random() - 0.5) * speed;
-      } else if (side == 3) { // bottom
+      } else if (side == 3) {
         x = this.rand(0, this.width);
         y = this.height + margin;
         vx = (Math.random() - 0.5) * speed;
@@ -119,8 +118,7 @@ class Game {
       }
       enemy = new PolygonEnemy(x, y, r, cfg.color, speed, this.player, this, vx, vy);
     } else {
-      // Zigzag enemy - spawns from random side and moves in zigzag pattern
-      const cfg = this.gameConfig.enemy.zigzag;
+      const cfg = this.gameConfig.enemy.diamond;
       const speed = this.rand(cfg.speed.min, cfg.speed.max);
       const r = this.rand(cfg.size.min, cfg.size.max);
       const margin = cfg.size.max * 2;
@@ -141,7 +139,7 @@ class Game {
         y = this.height + margin;
       }
       
-      enemy = new ZigzagEnemy(x, y, r, cfg.color, speed, this.player, this);
+      enemy = new DiamondEnemy(x, y, r, cfg.color, speed, this.player, this);
     }
 
     this.enemies.push(enemy);
@@ -222,6 +220,36 @@ class Game {
     this.enemies.forEach((e) => {
       e.draw(context);
     });
+    this.updateUI();
+  }
+
+  updateUI() {
+    const dashReady = this.player.dashCoolDown <= 0;
+    const dashStatus = document.getElementById('dashStatus');
+    const dashBar = document.getElementById('dashBar');
+    
+    if (dashReady) {
+      dashStatus.textContent = "Ready!";
+      dashStatus.className = "dash-ready";
+      dashBar.style.width = "100%";
+    } else {
+      const cooldownSeconds = Math.ceil(this.player.dashCoolDown / 1000);
+      dashStatus.textContent = `${cooldownSeconds}s`;
+      dashStatus.className = "dash-cooldown";
+      
+      const dashCooldownPercent = Math.max(0, this.player.dashCoolDown / this.player.maxCoolDown);
+      dashBar.style.width = `${(1 - dashCooldownPercent) * 100}%`;
+    }
+    
+    const survivalSeconds = Math.floor(this.gameTime / 1000);
+    const minutes = Math.floor(survivalSeconds / 60);
+    const seconds = survivalSeconds % 60;
+    document.getElementById('survivalTime').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    
+    document.getElementById('enemyCount').textContent = this.enemies.length;
+    
+    const score = Math.floor(this.gameTime / 100) + (this.enemies.length * 10);
+    document.getElementById('score').textContent = score;
   }
 
   resize() {

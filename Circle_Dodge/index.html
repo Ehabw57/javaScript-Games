@@ -1,11 +1,33 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Game</title>
+    <title>Circle Dodge Game</title>
     <link rel='stylesheet' href="style.css">
   </head>
   <body>
     <canvas id="game"></canvas>
+    
+    <div class="ui-pill top-left">
+      <div class="stat-item">Time: <span id="survivalTime">0:00</span></div>
+      <div class="stat-item">Enemies: <span id="enemyCount">0</span></div>
+    </div>
+    
+    <div class="ui-pill top-right">
+      <div class="stat-item">Score: <span id="score">0</span></div>
+    </div>
+    
+    <div class="ui-pill bottom-left">
+      <div class="control-item">Arrow Keys - Move</div>
+      <div class="control-item">Shift - Dash</div>
+    </div>
+    
+    <div class="ui-pill bottom-right">
+      <div id="dashStatus" class="dash-ready">Ready!</div>
+      <div class="dash-bar">
+        <div id="dashBar" class="dash-progress"></div>
+      </div>
+    </div>
+    
     <script src="main.js" type="module"> </script>
   </body>
 </html>
