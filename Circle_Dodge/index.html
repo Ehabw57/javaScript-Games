@@ -7,6 +7,7 @@
   <body>
     <canvas id="game"></canvas>
     
+
     <div class="ui-pill top-left">
       <div class="stat-item">Time: <span id="survivalTime">0:00</span></div>
       <div class="stat-item">Enemies: <span id="enemyCount">0</span></div>
@@ -18,10 +19,12 @@
     
     <div class="ui-pill bottom-left">
       <div class="control-item">Arrow Keys - Move</div>
-      <div class="control-item">Shift - Dash</div>
+      <div class="control-item">Shift - dash</div>
+      <div class="control-item">P - pause/resume</div>
+      <div class="control-item">R - restart</div>
     </div>
     
-    <div class="ui-pill bottom-right">
+    <div class="ui-pill bottom-right dash-container ">
       <div id="dashStatus" class="dash-ready">Ready!</div>
       <div class="dash-bar">
         <div id="dashBar" class="dash-progress"></div>

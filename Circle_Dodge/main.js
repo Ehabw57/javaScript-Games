@@ -4,7 +4,7 @@ import Enemy, { CircleEnemy, TriangleEnemy, PolygonEnemy, DiamondEnemy } from ".
 
 
 const DEFFICULTY = {
-  spawnInterval: 2500,
+  spawnInterval: 3000,
   gridGap: 30,
   player: {
     size: 30,
@@ -13,23 +13,23 @@ const DEFFICULTY = {
     speed: 5,
     dashSpeed: 15,
     dashDuration: 200,
-    dashCoolDown: 1000,
+    dashCoolDown: 500,
   },
   enemy: {
     circle: {
-      size: { min: 10, max: 20 },
-      speed: { min: 1, max: 3 },
+      size: { min: 10, max: 25 },
+      speed: { min: 2, max: 4 },
       color: "#ff4444",
     },
     triangle: {
-      size: { min: 20, max: 50 },
-      speed: { min: 15, max: 25 },
+      size: { min: 30, max: 40 },
+      speed: { min: 15, max: 32 },
       color: "#ff8800",
     },
     polygon: {
-      size: { min: 20, max: 20 },
+      size: { min: 20, max: 25 },
       speed: { min: 3, max: 7 },
-      color: "#8800ff",
+      color: "#8830ff",
     },
     diamond: {
       size: { min: 15, max: 15 },
@@ -79,59 +79,53 @@ class Game {
     this.unlockedEnemyTypes = ['triangle'];
     this.notificationTime = 0;
     this.currentNotification = null;
-    this.player.x = this.game.width / 2;
-    this.player.y = this.game.height / 2;
+    this.player.x = this.game.width / 2 - this.player.size /2;
+    this.player.y = this.game.height / 2 - this.player.size /2;
     this.player.dashCoolDown = 0;
     this.player.dashTime = 0;
   }
 
   togglePause() {
-    if (this.state === 'running') {
-      this.state = 'paused';
-    } else if (this.state === 'paused') {
-      this.state = 'running';
-    }
+    this.state == 'running' ? this.state = 'paused' : this.state = 'running'
   }
 
   restartGame() {
     this.startGame();
   }
+  createCircleEnemy() {
+    const cfg = this.gameConfig.enemy.circle;
+    const margin = cfg.size.max * 2;
+    const speed = this.rand(cfg.speed.min, cfg.speed.max);
+    const r = this.rand(cfg.size.min, cfg.size.max);
+    const side = Math.floor(this.rand(0, 4));
+    let x, y = 0;
 
-  spawnEnemy() {
-    const availableTypes = this.unlockedEnemyTypes;
-    const randomIndex = Math.floor(Math.random() * availableTypes.length);
-    const enemyTypeName = availableTypes[randomIndex];
-    let enemy;
+    if (side == 0) {
+      x = -margin;
+      y = this.rand(0, this.height);
+    } else if (side == 1) {
+      x = this.rand(0, this.width);
+      y = -margin;
+    } else if (side == 2) {
+      x = this.width + margin;
+      y = this.rand(0, this.height);
+    } else if (side == 3) {
+      x = this.rand(0, this.width);
+      y = this.height + margin;
+    }
 
-    if (enemyTypeName === 'circle') {
-      const cfg = this.gameConfig.enemy.circle;
-      const margin = cfg.size.max * 2;
-      const speed = this.rand(cfg.speed.min, cfg.speed.max);
-      const r = this.rand(cfg.size.min, cfg.size.max);
-      const side = Math.floor(this.rand(0, 4));
-      let x, y = 0;
+    return new CircleEnemy(x, y, r, cfg.color, speed, this.player, this);
+  }
 
-      if (side == 0) {
-        x = -margin;
-        y = this.rand(0, this.height);
-      } else if (side == 1) {
-        x = this.rand(0, this.width);
-        y = -margin;
-      } else if (side == 2) {
-        x = this.width + margin;
-        y = this.rand(0, this.height);
-      } else if (side == 3) {
-        x = this.rand(0, this.width);
-        y = this.height + margin;
-      }
-
-      enemy = new CircleEnemy(x, y, r, cfg.color, speed, this.player, this);
-    } else if (enemyTypeName === 'triangle') {
+  createTriangleEnemey() {
       const cfg = this.gameConfig.enemy.triangle;
       const speed = this.rand(cfg.speed.min, cfg.speed.max);
       const r = this.rand(cfg.size.min, cfg.size.max);
-      enemy = new TriangleEnemy(0, 0, r, cfg.color, speed, this.player, this);
-    } else if (enemyTypeName === 'polygon') {
+
+      return new TriangleEnemy(0, 0, r, cfg.color, speed, this.player, this);
+  }
+
+  createPolygonEnemey() {
       const cfg = this.gameConfig.enemy.polygon;
       const speed = this.rand(cfg.speed.min, cfg.speed.max);
       const r = this.rand(cfg.size.min, cfg.size.max);
@@ -161,8 +155,10 @@ class Game {
         vx = (Math.random() - 0.5) * speed;
         vy = -Math.abs(speed);
       }
-      enemy = new PolygonEnemy(x, y, r, cfg.color, speed, this.player, this, vx, vy);
-    } else if (enemyTypeName === 'diamond') {
+      return  new PolygonEnemy(x, y, r, cfg.color, speed, this.player, this, vx, vy);
+  }
+
+  createDiamondEnemey() {
       const cfg = this.gameConfig.enemy.diamond;
       const speed = this.rand(cfg.speed.min, cfg.speed.max);
       const r = this.rand(cfg.size.min, cfg.size.max);
@@ -184,8 +180,22 @@ class Game {
         y = this.height + margin;
       }
       
-      enemy = new DiamondEnemy(x, y, r, cfg.color, speed, this.player, this);
-    }
+      return new DiamondEnemy(x, y, r, cfg.color, speed, this.player, this);
+  }
+  spawnEnemy() {
+    const availableTypes = this.unlockedEnemyTypes;
+    const randomIndex = Math.floor(Math.random() * availableTypes.length);
+    const enemyTypeName = availableTypes[randomIndex];
+    let enemy = undefined;
+
+    if (enemyTypeName === 'circle') 
+      enemy = this.createCircleEnemy();
+    else if (enemyTypeName === 'triangle')
+      enemy = this.createTriangleEnemey();
+    else if (enemyTypeName === 'polygon')
+      enemy = this.createPolygonEnemey();
+    else if (enemyTypeName === 'diamond')
+      enemy = this.createDiamondEnemey();
 
     this.enemies.push(enemy);
   }
@@ -204,7 +214,7 @@ class Game {
       context.moveTo(0, y);
       context.lineTo(this.width, y);
     }
-    context.strokeStyle = "rgba(200,200,200,0.6)";
+    context.strokeStyle = "rgba(200,200,200,0.4)";
     context.lineWidth = 0.4;
     context.stroke();
   }
@@ -259,8 +269,8 @@ class Game {
 
   checkForNewEnemyType() {
     const seconds = Math.floor(this.gameTime / 1000);
-    const enemyTypes = ['triangle', 'circle', 'polygon', 'diamond'];
-    const unlockTimes = [0, 20, 40, 60];
+    const enemyTypes = ['triangle', 'polygon', 'diamond', 'circle'];
+    const unlockTimes = [0, 7, 18, 27];
     
     for (let i = 0; i < enemyTypes.length; i++) {
       if (seconds >= unlockTimes[i] && !this.unlockedEnemyTypes.includes(enemyTypes[i])) {
@@ -297,7 +307,7 @@ class Game {
   }
 
   drawNotification(context) {
-    const centerX = this.width / 2;
+    const centerX = this.width / 2 - 30;
     const topY = 100;
     
     context.fillStyle = "white";
@@ -310,7 +320,7 @@ class Game {
     context.fillStyle = "#00ff88";
     context.fillText(this.currentNotification.toUpperCase(), centerX, topY + 40);
     
-    this.drawEnemyPreview(context, centerX, topY + 80, this.currentNotification);
+    this.drawEnemyPreview(context, centerX, topY + 90, this.currentNotification);
   }
 
   drawEnemyPreview(context, x, y, enemyType) {
